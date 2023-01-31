@@ -433,7 +433,11 @@ func receive(c *cli.Context) (err error) {
 	}
 
 	if crocOptions.SharedSecret == "" {
-		crocOptions.SharedSecret = utils.GetInput("Enter receive code: ")
+		if c.Options.Quiet {
+			crocOptions.SharedSecret = utils.GetInput("")
+		} else {
+			crocOptions.SharedSecret = utils.GetInput("Enter receive code: ")
+		}
 	}
 	if c.String("out") != "" {
 		if err = os.Chdir(c.String("out")); err != nil {
