@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/schollz/cli/v2"
-	"github.com/schollz/croc/v9/src/comm"
-	"github.com/schollz/croc/v9/src/croc"
-	"github.com/schollz/croc/v9/src/models"
-	"github.com/schollz/croc/v9/src/tcp"
-	"github.com/schollz/croc/v9/src/utils"
+	"github.com/pepa65/croc/v9/src/comm"
+	"github.com/pepa65/croc/v9/src/croc"
+	"github.com/pepa65/croc/v9/src/models"
+	"github.com/pepa65/croc/v9/src/tcp"
+	"github.com/pepa65/croc/v9/src/utils"
 	log "github.com/schollz/logger"
 	"github.com/schollz/pake/v3"
 )
@@ -68,6 +68,7 @@ func Run() (err error) {
 				&cli.BoolFlag{Name: "no-local", Usage: "disable local relay when sending"},
 				&cli.BoolFlag{Name: "no-multi", Usage: "disable multiplexing"},
 				&cli.StringFlag{Name: "ports", Value: "9009,9010,9011,9012,9013", Usage: "ports of the local relay (optional)"},
+				&cli.BoolFlag{Name: "quiet", Usage: "disable extraneous output"},
 			},
 			HelpName: "croc send",
 			Action:   send,
@@ -193,6 +194,7 @@ func send(c *cli.Context) (err error) {
 		HashAlgorithm:  c.String("hash"),
 		ThrottleUpload: c.String("throttleUpload"),
 		ZipFolder:      c.Bool("zip"),
+		Quiet:          c.Bool("quiet"),
 	}
 	if crocOptions.RelayAddress != models.DEFAULT_RELAY {
 		crocOptions.RelayAddress6 = ""

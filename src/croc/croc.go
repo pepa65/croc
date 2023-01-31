@@ -25,13 +25,13 @@ import (
 	"github.com/schollz/peerdiscovery"
 	"github.com/schollz/progressbar/v3"
 
-	"github.com/schollz/croc/v9/src/comm"
-	"github.com/schollz/croc/v9/src/compress"
-	"github.com/schollz/croc/v9/src/crypt"
-	"github.com/schollz/croc/v9/src/message"
-	"github.com/schollz/croc/v9/src/models"
-	"github.com/schollz/croc/v9/src/tcp"
-	"github.com/schollz/croc/v9/src/utils"
+	"github.com/pepa65/croc/v9/src/comm"
+	"github.com/pepa65/croc/v9/src/compress"
+	"github.com/pepa65/croc/v9/src/crypt"
+	"github.com/pepa65/croc/v9/src/message"
+	"github.com/pepa65/croc/v9/src/models"
+	"github.com/pepa65/croc/v9/src/tcp"
+	"github.com/pepa65/croc/v9/src/utils"
 )
 
 var (
@@ -77,6 +77,7 @@ type Options struct {
 	ThrottleUpload string
 	ZipFolder      bool
 	TestFlag       bool
+	Quiet          bool
 }
 
 // Client holds the state of the croc transfer
@@ -399,9 +400,11 @@ func (c *Client) sendCollectFiles(filesInfo []FileInfo) (err error) {
 		if err != nil {
 			return
 		}
-		log.Debugf("file %d info: %+v", i, c.FilesToTransfer[i])
-		fmt.Fprintf(os.Stderr, "\r                                 ")
-		fmt.Fprintf(os.Stderr, "\rSending %d files (%s)", i, utils.ByteCountDecimal(totalFilesSize))
+		if !c.Options.Quiet {
+			log.Debugf("file %d info: %+v", i, c.FilesToTransfer[i])
+			fmt.Fprintf(os.Stderr, "\r                                 ")
+			fmt.Fprintf(os.Stderr, "\rSending %d files (%s)", i, utils.ByteCountDecimal(totalFilesSize))
+		}
 	}
 	log.Debugf("longestFilename: %+v", c.longestFilename)
 	fname := fmt.Sprintf("%d files", len(c.FilesToTransfer))
@@ -416,11 +419,13 @@ func (c *Client) sendCollectFiles(filesInfo []FileInfo) (err error) {
 		}
 	}
 
-	fmt.Fprintf(os.Stderr, "\r                                 ")
-	if c.TotalNumberFolders > 0 {
-		fmt.Fprintf(os.Stderr, "\rSending %s and %s (%s)\n", fname, folderName, utils.ByteCountDecimal(totalFilesSize))
-	} else {
-		fmt.Fprintf(os.Stderr, "\rSending %s (%s)\n", fname, utils.ByteCountDecimal(totalFilesSize))
+	if !c.Options.Quiet {
+		fmt.Fprintf(os.Stderr, "\r                                 ")
+		if c.TotalNumberFolders > 0 {
+			fmt.Fprintf(os.Stderr, "\rSending %s and %s (%s)\n", fname, folderName, utils.ByteCountDecimal(totalFilesSize))
+		} else {
+			fmt.Fprintf(os.Stderr, "\rSending %s (%s)\n", fname, utils.ByteCountDecimal(totalFilesSize))
+		}
 	}
 	return
 }
@@ -528,10 +533,14 @@ func (c *Client) Send(filesInfo []FileInfo, emptyFoldersToTransfer []FileInfo, t
 	if c.Options.RelayPassword != models.DEFAULT_PASSPHRASE {
 		flags.WriteString("--pass " + c.Options.RelayPassword + " ")
 	}
-	fmt.Fprintf(os.Stderr, "Code is: %[1]s\nOn the other computer run\n\ncroc %[2]s%[1]s\n", c.Options.SharedSecret, flags.String())
-	if c.Options.Ask {
-		machid, _ := machineid.ID()
-		fmt.Fprintf(os.Stderr, "\rYour machine ID is '%s'\n", machid)
+	if c.Options.Quiet {
+		fmt.Printf("%s\n", c.Options.SharedSecret)
+	} else {
+		fmt.Fprintf(os.Stderr, "Code is: %[1]s\nOn the other computer run\n\ncroc %[2]s%[1]s\n", c.Options.SharedSecret, flags.String())
+		if c.Options.Ask {
+			machid, _ := machineid.ID()
+			fmt.Fprintf(os.Stderr, "\rYour machine ID is '%s'\n", machid)
+		}
 	}
 	// // c.spinner.Suffix = " waiting for recipient..."
 	// c.spinner.Start()
@@ -656,7 +665,9 @@ func (c *Client) Send(filesInfo []FileInfo, emptyFoldersToTransfer []FileInfo, t
 
 // Receive will receive a file
 func (c *Client) Receive() (err error) {
-	fmt.Fprintf(os.Stderr, "connecting...")
+	if !c.Options.Quiet {
+		fmt.Fprintf(os.Stderr, "connecting...")
+	}
 	// recipient will look for peers first
 	// and continue if it doesn't find any within 100 ms
 	usingLocal := false
@@ -853,11 +864,17 @@ func (c *Client) Receive() (err error) {
 		c.Options.RelayPorts = []string{c.Options.RelayPorts[0]}
 	}
 	log.Debug("exchanged header message")
-	fmt.Fprintf(os.Stderr, "\rsecuring channel...")
+	if !c.Options.Quiet {
+		fmt.Fprintf(os.Stderr, "\rsecuring channel...")
+	}
 	err = c.transfer()
 	if err == nil {
 		if c.numberOfTransferredFiles+len(c.EmptyFoldersToTransfer) == 0 {
-			fmt.Fprintf(os.Stderr, "\rNo files transferred.")
+			if c.Options.Quiet {
+				fmt.Println("#")
+			} else {
+				fmt.Fprintf(os.Stderr, "\rNo files transferred.")
+			}
 		}
 	}
 	return
@@ -961,7 +978,9 @@ func (c *Client) createEmptyFolder(i int) (err error) {
 	if err != nil {
 		return
 	}
-	fmt.Fprintf(os.Stderr, "%s\n", c.EmptyFoldersToTransfer[i].FolderRemote)
+	if !c.Options.Quiet {
+		fmt.Fprintf(os.Stderr, "%s\n", c.EmptyFoldersToTransfer[i].FolderRemote)
+	}
 	c.bar = progressbar.NewOptions64(1,
 		progressbar.OptionOnCompletion(func() {
 			c.fmtPrintUpdate()
@@ -1034,32 +1053,36 @@ func (c *Client) processMessageFileInfo(m message.Message) (done bool, err error
 		action = "Display"
 		fname = "text message"
 	}
-	if !c.Options.NoPrompt || c.Options.Ask || senderInfo.Ask {
-		if c.Options.Ask || senderInfo.Ask {
-			machID, _ := machineid.ID()
-			fmt.Fprintf(os.Stderr, "\rYour machine id is '%s'.\n%s %s (%s) from '%s'? (Y/n) ", machID, action, fname, utils.ByteCountDecimal(totalSize), senderInfo.MachineID)
-		} else {
-			if c.TotalNumberFolders > 0 {
-				fmt.Fprintf(os.Stderr, "\r%s %s and %s (%s)? (Y/n) ", action, fname, folderName, utils.ByteCountDecimal(totalSize))
-			} else {
-				fmt.Fprintf(os.Stderr, "\r%s %s (%s)? (Y/n) ", action, fname, utils.ByteCountDecimal(totalSize))
-			}
-		}
-		choice := strings.ToLower(utils.GetInput(""))
-		if choice != "" && choice != "y" && choice != "yes" {
-			err = message.Send(c.conn[0], c.Key, message.Message{
-				Type:    message.TypeError,
-				Message: "refusing files",
-			})
-			if err != nil {
-				return false, err
-			}
-			return true, fmt.Errorf("refused files")
-		}
+	if c.Options.Quiet {
+		fmt.Println("@");
 	} else {
-		fmt.Fprintf(os.Stderr, "\rReceiving %s (%s) \n", fname, utils.ByteCountDecimal(totalSize))
+		if !c.Options.NoPrompt || c.Options.Ask || senderInfo.Ask {
+			if c.Options.Ask || senderInfo.Ask {
+				machID, _ := machineid.ID()
+				fmt.Fprintf(os.Stderr, "\rYour machine id is '%s'.\n%s %s (%s) from '%s'? (Y/n) ", machID, action, fname, utils.ByteCountDecimal(totalSize), senderInfo.MachineID)
+			} else {
+				if c.TotalNumberFolders > 0 {
+					fmt.Fprintf(os.Stderr, "\r%s %s and %s (%s)? (Y/n) ", action, fname, folderName, utils.ByteCountDecimal(totalSize))
+				} else {
+					fmt.Fprintf(os.Stderr, "\r%s %s (%s)? (Y/n) ", action, fname, utils.ByteCountDecimal(totalSize))
+				}
+			}
+			choice := strings.ToLower(utils.GetInput(""))
+			if choice != "" && choice != "y" && choice != "yes" {
+				err = message.Send(c.conn[0], c.Key, message.Message{
+					Type:    message.TypeError,
+					Message: "refusing files",
+				})
+				if err != nil {
+					return false, err
+				}
+				return true, fmt.Errorf("refused files")
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "\rReceiving %s (%s) \n", fname, utils.ByteCountDecimal(totalSize))
+		}
+		fmt.Fprintf(os.Stderr, "\nReceiving (<-%s)\n", c.ExternalIPConnected)
 	}
-	fmt.Fprintf(os.Stderr, "\nReceiving (<-%s)\n", c.ExternalIPConnected)
 
 	for i := 0; i < len(c.EmptyFoldersToTransfer); i += 1 {
 		_, errExists := os.Stat(c.EmptyFoldersToTransfer[i].FolderRemote)
@@ -1566,7 +1589,7 @@ func (c *Client) updateIfRecipientHasFileInfo() (err error) {
 			c.FilesToTransferCurrentNum = i
 			c.numberOfTransferredFiles++
 			newFolder, _ := filepath.Split(fileInfo.FolderRemote)
-			if newFolder != c.LastFolder && len(c.FilesToTransfer) > 0 && !c.Options.SendingText && newFolder != "./" {
+			if !c.Options.Quiet && newFolder != c.LastFolder && len(c.FilesToTransfer) > 0 && !c.Options.SendingText && newFolder != "./" {
 				fmt.Fprintf(os.Stderr, "\r%s\n", newFolder)
 			}
 			c.LastFolder = newFolder
@@ -1579,10 +1602,12 @@ func (c *Client) updateIfRecipientHasFileInfo() (err error) {
 
 func (c *Client) fmtPrintUpdate() {
 	c.finishedNum++
-	if c.TotalNumberOfContents > 1 {
-		fmt.Fprintf(os.Stderr, " %d/%d\n", c.finishedNum, c.TotalNumberOfContents)
-	} else {
-		fmt.Fprintf(os.Stderr, "\n")
+	if !c.Options.Quiet {
+		if c.TotalNumberOfContents > 1 {
+			fmt.Fprintf(os.Stderr, " %d/%d\n", c.finishedNum, c.TotalNumberOfContents)
+		} else {
+			fmt.Fprintf(os.Stderr, "\n")
+		}
 	}
 }
 
@@ -1594,6 +1619,10 @@ func (c *Client) updateState() (err error) {
 
 	err = c.updateIfRecipientHasFileInfo()
 	if err != nil {
+		return
+	}
+
+	if c.Options.Quiet {
 		return
 	}
 
