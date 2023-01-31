@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	"github.com/pepa65/croc/v9/src/utils"
+	"github.com/pepa65/croc/src/utils"
 )
 
 // TCP_BUFFER_SIZE is the maximum packet size

@@ -13,11 +13,11 @@ import (
 	"time"
 
 	"github.com/schollz/cli/v2"
-	"github.com/pepa65/croc/v9/src/comm"
-	"github.com/pepa65/croc/v9/src/croc"
-	"github.com/pepa65/croc/v9/src/models"
-	"github.com/pepa65/croc/v9/src/tcp"
-	"github.com/pepa65/croc/v9/src/utils"
+	"github.com/pepa65/croc/src/comm"
+	"github.com/pepa65/croc/src/croc"
+	"github.com/pepa65/croc/src/models"
+	"github.com/pepa65/croc/src/tcp"
+	"github.com/pepa65/croc/src/utils"
 	log "github.com/schollz/logger"
 	"github.com/schollz/pake/v3"
 )

@@ -10,13 +10,13 @@ install: true
 
 script:
   - env GO111MODULE=on go build -v
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/compress
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/croc
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/crypt
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/tcp
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/utils
-  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/v9/src/comm
- 
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/compress
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/croc
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/crypt
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/tcp
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/utils
+  - env GO111MODULE=on go test -v -cover github.com/pepa65/croc/src/comm
+
 branches:
   except:
   - dev

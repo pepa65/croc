@@ -11,9 +11,9 @@ import (
 	log "github.com/schollz/logger"
 	"github.com/schollz/pake/v3"
 
-	"github.com/pepa65/croc/v9/src/comm"
-	"github.com/pepa65/croc/v9/src/crypt"
-	"github.com/pepa65/croc/v9/src/models"
+	"github.com/pepa65/croc/src/comm"
+	"github.com/pepa65/croc/src/crypt"
+	"github.com/pepa65/croc/src/models"
 )
 
 type server struct {
