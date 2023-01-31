@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/schollz/croc/v9/src/utils"
+	"github.com/pepa65/croc/v9/src/utils"
 	log "github.com/schollz/logger"
 	"golang.org/x/net/proxy"
 )
