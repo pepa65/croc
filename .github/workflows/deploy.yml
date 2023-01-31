@@ -25,7 +25,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1
         with:
-          images: pepa65/croc
+          images: schollz/croc
           # tag-semver: "{{version}}"
           tag-sha: true
           tag-latest: true
